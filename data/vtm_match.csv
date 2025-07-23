@@ -1,0 +1,91 @@
+Antibiotic,atc_route,aware_2019,aware_2024,nm
+Amikacin,,Watch,Watch,Amikacin
+Amoxicillin,,Access,Access,Amoxicillin
+Ampicillin,,Access,Access,Ampicillin
+Azithromycin,,Watch,Watch,Azithromycin
+Aztreonam,,Reserve,Reserve,Aztreonam
+Benzathine benzylpenicillin,,Access,Access,Benzathine benzylpenicillin
+Benzylpenicillin,,Access,Access,Benzylpenicillin
+Cefaclor,,Watch,Watch,Cefaclor
+Cefadroxil,,Watch,Access,Cefadroxil
+Cefalexin,,Watch,Access,Cefalexin
+Cefalotin,,Watch,Access,
+Cefamandole,,Watch,Watch,Cefamandole
+Cefazolin,,Watch,Access,Cefazolin
+Cefepime,,Watch,Watch,Cefepime
+Cefiderocol,,Reserve,Reserve,Cefiderocol
+Cefixime,,Watch,Watch,Cefixime
+Cefotaxime,,Watch,Watch,Cefotaxime
+Cefoxitin,,Watch,Watch,Cefoxitin
+Cefradine,,Watch,Access,Cefradine
+Ceftaroline fosamil,,Reserve,Reserve,Ceftaroline fosamil
+Ceftazidime,,Watch,Watch,Ceftazidime
+Ceftazidime + Avibactam,,Reserve,Reserve,Ceftazidime + Avibactam
+Ceftobiprole,,Reserve,Reserve,Ceftobiprole
+Ceftolozane + Tazobactam,,Reserve,Reserve,Ceftolozane + Tazobactam
+Ceftriaxone,,Watch,Watch,Ceftriaxone
+Cefuroxime,,Watch,Watch,Cefuroxime
+Chloramphenicol,,Watch,Watch,Chloramphenicol
+Cilastatin + Imipenem + Relebactam,,Reserve,Reserve,Cilastatin + Imipenem + Relebactam
+Ciprofloxacin,,Watch,Watch,Ciprofloxacin
+Clarithromycin,,Watch,Watch,Clarithromycin
+Clindamycin,,Watch,Watch,Clindamycin
+Co-amoxiclav,,Watch,Watch,Co-amoxiclav
+Co-trimoxazole,,Access,Access,Co-trimoxazole
+Colistin,P,Reserve,Reserve,Colistin
+Colistin,O,Reserve,Reserve,Colistin
+Dalbavancin,,Reserve,Reserve,Dalbavancin
+Daptomycin,,Reserve,Reserve,Daptomycin
+Delafloxacin,,Watch,Watch,Delafloxacin
+Demeclocycline,,Watch,Other,Demeclocycline
+Doripenem,,Reserve,Reserve,Doripenem
+Doxycycline,,Access,Access,Doxycycline
+Eravacycline,,Reserve,Reserve,Eravacycline
+Ertapenem,,Reserve,Reserve,Ertapenem
+Erythromycin,,Watch,Watch,Erythromycin
+Fidaxomicin,,Watch,Watch,Fidaxomicin
+Flucloxacillin,,Access,Access,Flucloxacillin
+Fosfomycin,P,Reserve,Reserve,Fosfomycin
+Fosfomycin,O,Access,Access,Fosfomycin
+Fusidic acid,,Access,Watch,Fusidic acid
+Gentamicin,,Access,Access,Gentamicin
+Imipenem + Cilastatin,,Reserve,Reserve,Imipenem + Cilastatin
+Levofloxacin,,Watch,Watch,Levofloxacin
+Linezolid,,Reserve,Reserve,Linezolid
+Lymecycline,,Watch,Watch,Lymecycline
+Meropenem,,Reserve,Reserve,Meropenem
+Meropenem + Vaborbactam,,Reserve,Reserve,Meropenem + Vaborbactam
+Methenamine,,Other,Other,Methenamine
+Metronidazole,,Access,Access,Metronidazole
+Minocycline,O,Watch,Watch,Minocycline
+Moxifloxacin,,Watch,Watch,Moxifloxacin
+Nalidixic Acid,,Other,Other,
+Neomycin,,Watch,Watch,Neomycin
+Nitrofurantoin,,Access,Access,Nitrofurantoin
+Norfloxacin,,Watch,Watch,Norfloxacin
+Ofloxacin,,Watch,Watch,Ofloxacin
+Oritavancin,,Reserve,Reserve,Oritavancin
+Oxytetracycline,,Watch,Watch,Oxytetracycline
+Phenoxymethylpenicillin,,Access,Access,Phenoxymethylpenicillin
+Piperacillin,,Watch,Watch,
+Piperacillin + Tazobactam,,Watch,Watch,Piperacillin + Tazobactam
+Pivmecillinam,,Access,Access,Pivmecillinam
+Pristinamycin,,Watch,Other,Pristinamycin
+Procaine benzylpenicillin,,Access,Access,Procaine benzylpenicillin
+Quinupristin + Dalfopristin,,Reserve,Reserve,Quinupristin + Dalfopristin
+Spectinomycin,,Other,Other,Spectinomycin
+Spiramycin,,Other,Other,Spiramycin
+Streptomycin,P,Other,Other,Streptomycin
+Sulfadiazine,,Other,Other,Sulfadiazine
+Sulfamethoxypyridazine,,Other,Other,Sulfamethoxypyridazine
+Sulfapyridine,,Other,Other,Sulfapyridine
+Tedizolid,,Reserve,Reserve,Tedizolid
+Teicoplanin,,Watch,Watch,Teicoplanin
+Telavancin,,Reserve,Reserve,Telavancin
+Temocillin,,Watch,Watch,Temocillin
+Tetracycline,,Access,Access,Tetracycline
+Tigecycline,,Reserve,Reserve,Tigecycline
+Tinidazole,,Other,Access,Tinidazole
+Tobramycin,,Watch,Watch,Tobramycin
+Trimethoprim,,Access,Access,Trimethoprim
+Vancomycin,,Watch,Watch,Vancomycin
