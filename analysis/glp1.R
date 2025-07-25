@@ -10,9 +10,8 @@ library(stringr)
 library(here)
 
 # read OP data
-df_input <- read_csv(here::here("data","vtm_matched.csv")) 
-# %>%
-#   mutate(across('bnf_name',str_replace,"/","-"))
+df_input <- read_csv(here::here("data","vtm_matched.csv"))
+
 
 # combine with region name
 df_regions <- read_csv(here::here("data","NHS_England_Names_and_Codes_in_England.csv")) %>%
@@ -30,7 +29,8 @@ df_input_bydrug <- df_input %>%
 # plot group by drug
 bydrug_plot <- df_input_bydrug %>%
   ggplot(aes(x = month, y = quantity, color = drug)) +
-  geom_line()
+  geom_line()  +
+  scale_y_continuous(labels = label_comma())
 
 ggsave(
   filename = here::here(
@@ -52,7 +52,8 @@ df_input_byregion <- df_input %>%
 # plot group by region
 byregion_plot <- df_input_byregion %>%
   ggplot(aes(x = month, y = quantity, color = region)) +
-  geom_line()
+  geom_line()  +
+  scale_y_continuous(labels = label_comma())
 
 ggsave(
   filename = here::here(
@@ -76,7 +77,8 @@ df_input_bydrug_region <- df_input %>%
 bydrug_region_plot <- df_input_bydrug_region %>%
   ggplot(aes(x = month, y = quantity, color = drug)) +
   geom_line() +
-  facet_wrap(~ region, ncol = 3)
+  facet_wrap(~ region, ncol = 3)  +
+  scale_y_continuous(labels = label_comma())
 
 ggsave(
   filename = here::here(
@@ -89,20 +91,10 @@ ggsave(
   units = "cm"
 )
 
-
-
-
 ### by bnf name per drug
 df_input_by_bnf <- df_input %>%
   group_by(bnf_name,month,drug) %>%
   summarise(quantity = sum(quantity))
-
-dulaglutide <- df_input_by_bnf %>%
-  filter(drug == "Dulaglutide")
-
-dulaglutide_plot <- dulaglutide %>%
-  ggplot(aes(x = month, y = quantity, color = bnf_name)) +
-  geom_line()
 
 
 drug_name<-df_input %>%
@@ -118,8 +110,12 @@ for(i in 1:length(drug_name)){
   assign(paste0(drug_name[i],"_plot"),
          get(drug_name[i]) %>%
            ggplot(aes(x = month, y = quantity, color = bnf_name)) +
-           geom_line()
-         )
+           geom_line() +
+           scale_x_date(labels = date_format("%b %Y"), 
+                        date_breaks = "3 months") + 
+           theme(axis.text.x=element_text(angle=60, hjust=1))
+         ) +
+    scale_y_continuous(labels = label_comma())
   
   ggsave(
     filename = here::here(
@@ -141,6 +137,88 @@ ggsave(
   Semaglutide_plot,
   dpi = 600,
   width = 35,
+  height = 15,
+  units = "cm"
+)
+
+
+### Semaglutide key dates
+semaglutide_dates<- tibble(dates=as.Date(c("2022-06-01","2023-03-01","2023-09-01")),
+                           label = c("Final\nappraisal\ndocument","Published","Updated"),
+                           alpha = c(0.2,0.3,0.4),
+                           colour = "#00468BFF",
+                           y = c(680000, 720000, 760000))
+
+
+Semaglutide_nice_plot <- Semaglutide_plot +
+  geom_vline(xintercept = semaglutide_dates$dates, 
+             alpha = semaglutide_dates$alpha, 
+             colour = semaglutide_dates$colour) +
+  annotate("text", x= semaglutide_dates$dates, 
+          y = semaglutide_dates$y, 
+          label = semaglutide_dates$label)  +
+  scale_y_continuous(labels = label_comma())
+
+
+ggsave(
+  filename = here::here(
+    "output","Semaglutide_nice_plot.png"),
+  Semaglutide_nice_plot,
+  dpi = 600,
+  width = 35,
+  height = 15,
+  units = "cm"
+)
+
+## bnf name semaglutide
+
+Semaglutide_bnf <- Semaglutide %>%
+  filter(str_detect(bnf_name, 'Semaglutide')) %>%
+  ggplot(aes(x = month, y = quantity, color = bnf_name)) +
+  geom_line() +
+  scale_x_date(labels = date_format("%b %Y"), 
+               date_breaks = "3 months") + 
+  theme(axis.text.x=element_text(angle=60, hjust=1))  +
+  geom_vline(xintercept = semaglutide_dates$dates, 
+             alpha = semaglutide_dates$alpha, 
+             colour = semaglutide_dates$colour) +
+  annotate("text", x= semaglutide_dates$dates, 
+           y = c(380000,390000,410000), 
+           label = semaglutide_dates$label)  +
+  scale_y_continuous(labels = label_comma())
+
+ggsave(
+  filename = here::here(
+    "output","Semaglutide_bnf_plot.png"),
+  Semaglutide_bnf,
+  dpi = 600,
+  width = 25,
+  height = 15,
+  units = "cm"
+)
+
+## bnf name wegovy
+Wegovy_bnf <- Semaglutide %>%
+  filter(str_detect(bnf_name, 'Wegovy')) %>%
+  ggplot(aes(x = month, y = quantity, color = bnf_name)) +
+  geom_line() +
+  scale_x_date(labels = date_format("%b %Y"), 
+               date_breaks = "3 months") + 
+  theme(axis.text.x=element_text(angle=60, hjust=1))  +
+  geom_vline(xintercept = semaglutide_dates$dates, 
+             alpha = semaglutide_dates$alpha, 
+             colour = semaglutide_dates$colour) +
+  annotate("text", x= semaglutide_dates$dates, 
+           y= c(100,200,300),
+           label = semaglutide_dates$label)  +
+  scale_y_continuous(labels = label_comma())
+
+ggsave(
+  filename = here::here(
+    "output","Wegovy_bnf_plot.png"),
+  Wegovy_bnf,
+  dpi = 600,
+  width = 25,
   height = 15,
   units = "cm"
 )
