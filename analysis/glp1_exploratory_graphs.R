@@ -357,12 +357,8 @@ bnf_region_funct<-function(grouping_1,bnf){
 }
 
 for(gr1 in group_1){
-  for(bnf_nam in c("Wegovy","Semaglutide","Wegovy|Semaglutide"))
+  for(bnf_nam in c("Wegovy","Semaglutide","Wegovy|Semaglutide","Lixisenatide|Ozempic"))
     bnf_region_funct(gr1,bnf_nam)
 }
-
-
-df_input %>% filter(!str_detect(bnf_name, "!")) %>% View()
-
 
 
