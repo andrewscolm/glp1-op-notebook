@@ -1,0 +1,383 @@
+library(scales)
+library(readr)
+library('tidyverse')
+library('sf')
+library(ggplot2)
+library(stringr)
+library(here)
+library("glue")
+
+# read OP data
+df_input <- read_csv(here::here("data","vtm_matched.csv"))
+
+# combine with region name
+df_regions <- read_csv(here::here("data","NHS_England_Names_and_Codes_in_England.csv")) %>%
+  rename(regional_team = NHSER24CDH ,region = NHSER24NM) %>%
+  select(regional_team,region)
+
+df_input <- df_input %>%
+  left_join(df_regions)
+
+df_dulaglutide <- df_input %>%
+  filter(drug=="Dulaglutide") 
+
+df_dulaglutide_names <- df_dulaglutide %>%  
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+#### referencing against OP dmd browser https://openprescribing.net/dmd/?q=0601023AW to find brand
+#### note 0.5mg/0.37ml inj 1.5ml can be either Ozempic or Wegovy
+df_dulaglutide <- df_dulaglutide %>% 
+  mutate(brand_name = str_replace(bnf_name, 'Dulaglutide ', 'Trulicity '),
+         brand = "Trulicity")
+
+######## Exenatide
+df_exenatide <- df_input %>%
+  filter(drug=="Exenatide") 
+
+df_exenatide_names <- df_exenatide %>%  
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+df_exenatide <- df_exenatide %>%
+  mutate(brand = case_when(
+            str_detect(bnf_name,"10micrograms/0.04ml")~"Byetta",
+            str_detect(bnf_name,"2mg/0.85ml")~"Bydureon",
+            str_detect(bnf_name,"2mg inj pre-filled pens")~"Bydureon",
+            str_detect(bnf_name,"2mg inj pre-filled disposable devices")~"Bydureon",
+            str_detect(bnf_name,"5micrograms/0.02ml")~"Byetta",
+            str_detect(bnf_name,"2mg inj vials")~"Bydureon"),
+          brand_name = case_when(
+            bnf_name == "Exenatide 10micrograms/0.04ml inj 2.4ml pf dispos dev"~"Byetta 10micrograms/0.04ml inj 2.4ml pre-filled pens",
+            bnf_name == "Exenatide 2mg inj pre-filled disposable devices"~"Bydureon 2mg inj pre-filled pens",
+            bnf_name == "Exenatide 2mg inj vials"~"Bydureon 2mg inj vials",
+            bnf_name == "Exenatide 2mg/0.85ml prolonged-release inj pf dispos dev"~"Bydureon BCise 2mg/0.85ml prolonged-release inj pf pens",
+            bnf_name == "Exenatide 5micrograms/0.02ml inj 1.2ml pf dispos dev"~"Byetta 5micrograms/0.02ml inj 1.2ml pre-filled pens",
+            .default = bnf_name)
+          )
+      
+
+
+# Check all names have a brand
+df_exenatide %>%
+  filter(is.na(brand)) %>%
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+#### insulin degludec
+df_insulin_liraglutide <- df_input %>%
+  filter(drug=="Insulin degludec/liraglutide") 
+
+df_insulin_liraglutide <- df_insulin_liraglutide %>%
+  mutate(brand_name = case_when(
+    bnf_name == "Insulin degludec 100u/ml/Lirag 3.6mg/ml inj3ml pf dispos dev" ~  "Xultophy 100units/ml / 3.6mg/ml inj 3ml pre-filled pens",
+    .default =  bnf_name),                          
+         brand = "Xultophy")
+
+df_insulin_liraglutide %>%
+  group_by(brand_name) %>%
+  summarise() %>%
+  pull(brand_name)
+
+##### insulin glargine
+df_insulin_lixisenatide <- df_input %>%
+  filter(drug=="Insulin glargine/lixisenatide") 
+
+df_insulin_lixisenatide <- df_insulin_lixisenatide %>%
+  mutate(brand_name = case_when(str_detect(bnf_name,"Ins glargine 100u/ml / Lixis 33mcg/ml inj")~"Suliqua 100units/ml / 33microg/ml inj 3ml pf SoloStar pens",
+                             str_detect(bnf_name,"Ins glargine 100u/ml / Lixis 50mcg/ml inj")~"Suliqua 100units/ml / 50microg/ml inj 3ml pf SoloStar pens",
+                             .default = bnf_name),
+         brand = "Suliqua")
+
+df_insulin_lixisenatide %>%
+  group_by(brand_name) %>%
+  summarise() %>%
+  pull(brand_name)
+
+##### liraglutide
+df_liraglutide <- df_input %>%
+  filter(drug=="Liraglutide") 
+
+df_liraglutide_names <- df_liraglutide %>%  
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+df_liraglutide <- df_liraglutide %>%
+  mutate(brand = word(bnf_name,1),
+         brand_name = bnf_name)
+
+df_liraglutide %>%
+  filter(is.na(brand_name)) %>%
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+
+### lixisenatide
+df_lixisenatide <- df_input %>%
+  filter(drug=="Lixisenatide") 
+
+df_lixisenatide <- df_lixisenatide %>%
+  mutate(brand_name = case_when(
+            bnf_name=='Lixisenatide 10microg/0.2ml and 20microg/0.2ml inj' ~'Lyxumia 10micrograms/20micrograms treatment initiation pack',
+            bnf_name=='Lixisenatide 10micrograms/0.2ml inj 3ml pf dispos dev' ~'Lyxumia 10micrograms/0.2ml inj 3ml pre-filled pens',
+            bnf_name=='Lixisenatide 20micrograms/0.2ml inj 3ml pf dispos dev' ~'Lyxumia 20micrograms/0.2ml inj 3ml pre-filled pens',
+            .default = bnf_name),
+         brand = "Lyxumia")
+
+
+df_lixisenatide %>%
+  group_by(brand_name) %>%
+  summarise() %>%
+  pull(brand_name)
+
+
+##### tirzepatide
+df_tirzepatide <- df_input %>%
+  filter(drug=="Tirzepatide")
+
+df_tirzepatide <- df_tirzepatide %>%
+  mutate(brand_name = case_when(
+    bnf_name == 'Tirzepatide 10mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 10mg/0.6ml',
+    bnf_name == 'Tirzepatide 12.5mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 12.5mg/0.6ml',
+    bnf_name == 'Tirzepatide 15mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 15mg/0.6ml',
+    bnf_name == 'Tirzepatide 2.5mg/0.5ml inj pre-filled disposable devices' ~ 'Mounjaro 2.5mg/0.5ml',
+    bnf_name == 'Tirzepatide 2.5mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 2.5mg/0.6ml',
+    bnf_name == 'Tirzepatide 5mg/0.5ml inj pre-filled disposable devices' ~ 'Mounjaro 5mg/0.5ml',
+    bnf_name == 'Tirzepatide 5mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 5mg/0.6ml',
+    bnf_name == 'Tirzepatide 7.5mg/0.6ml inj 2.4ml pf dispos dev' ~ 'Mounjaro 7.5mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 10mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 10mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 12.5mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 12.5mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 15mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 15mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 2.5mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 2.5mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 5mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 5mg/0.6ml',
+    bnf_name == 'Mounjaro KwikPen 7.5mg/0.6ml inj 2.4ml pre-filled pens' ~ 'Mounjaro 7.5mg/0.6ml',
+    bnf_name == 'Mounjaro 5mg/0.5ml solution for injection pre-filled pens' ~ 'Mounjaro 5mg/0.5ml',
+    bnf_name == 'Mounjaro 2.5mg/0.5ml solution for injection pre-filled pens' ~ 'Mounjaro 2.5mg/0.5ml',
+    .default = bnf_name),
+         brand = "Mounjaro")
+
+
+df_tirzepatide %>%
+  group_by(brand_name) %>%
+  summarise() %>%
+  pull(brand_name)
+
+
+### filter out tablets (note Rybelsus only available in tablet form)
+df_semaglutide <- df_input %>%
+  filter(drug=="Semaglutide")
+
+df_semaglutide_names <- df_semaglutide %>%  
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+#### referencing against OP dmd browser https://openprescribing.net/dmd/?q=0601023AW to find brand
+#### note 0.5mg/0.37ml inj 1.5ml can be either Ozempic or Wegovy
+df_semaglutide <- df_semaglutide %>%
+  mutate(
+  brand_name = case_when(
+    str_detect(bnf_name,"0.25mg/0.19ml")~"Ozempic 0.25mg/0.19ml",
+    str_detect(bnf_name,"Ozempic 0.5mg/0.37ml")~"Ozempic 0.5mg/0.37ml",
+    str_detect(bnf_name,"1mg/0.74ml")~"Ozempic 1mg/0.74ml",
+    str_detect(bnf_name,"3mg")~"Rybelsus 3mg",
+    str_detect(bnf_name,"7mg")~"Rybelsus 7mg",
+    str_detect(bnf_name,"14mg")~"Rybelsus 14mg",
+    str_detect(bnf_name,"0.25mg/0.37ml")~"Wegovy 0.25mg/0.37ml",
+    str_detect(bnf_name,"Wegovy FlexTouch 0.5mg/0.37ml")~"Wegovy 0.5mg/0.37ml",
+    str_detect(bnf_name,"1mg/0.75ml")~"Wegovy 1mg/0.75ml",
+    str_detect(bnf_name,"1.7mg/0.75ml")~"Wegovy 1.7mg/0.75ml",
+    str_detect(bnf_name,"2.4mg/0.75ml")~"Wegovy 2.4mg/0.75ml",
+    str_detect(bnf_name,"0.5mg/0.37ml")~"Ozempic/Wegovy 0.5mg/0.37ml",
+  ),
+  brand = word(brand_name,1))
+
+# Check all names have a brand
+df_semaglutide %>%
+  group_by(brand_name) %>%
+  summarise() %>%
+  pull(brand_name)
+
+df_semaglutide %>%
+  filter(is.na(brand_name)) %>%
+  group_by(bnf_name) %>%
+  summarise() %>%
+  pull(bnf_name)
+
+#### brands
+
+df_all_glp1 <- df_semaglutide %>%
+  bind_rows(df_tirzepatide,
+            df_dulaglutide,
+            df_exenatide,
+            df_insulin_liraglutide,
+            df_insulin_lixisenatide,
+            df_liraglutide,
+            df_lixisenatide)
+
+
+df_semaglutide_brand_plot <- df_semaglutide_brand %>%
+  ggplot(aes(x = month, y = items, color = brand)) +
+  geom_line() +
+  scale_y_continuous(labels = label_comma()) 
+
+for(drug_name in (c("all_glp1","semaglutide", "tirzepatide", "dulaglutide", "exenatide", "insulin_liraglutide",
+                    "insulin_lixisenatide", "liraglutide", "lixisenatide"))){
+ 
+  ## brands
+   assign(glue("{drug_name}_brand"),
+         get(glue("df_{drug_name}"))  %>%
+           group_by(month,brand) %>%
+           summarise(items = sum(items))
+           )
+         
+  assign(glue("{drug_name}_brand_plot"),
+         get(glue("{drug_name}_brand"))  %>%
+           ggplot(aes(x = month, y = items, color = brand)) +
+           geom_line() +
+           scale_y_continuous(labels = label_comma()) +
+           ggtitle(drug_name) +
+           theme_bw()
+  )
+  
+  ggsave(
+    filename = here::here(
+      "output",
+      "by_brand",
+      glue("{drug_name}_brand_plot.png")
+    ),
+    get(glue("{drug_name}_brand_plot")),
+    dpi = 600,
+    width = 25,
+    height = 15,
+    units = "cm"
+  )
+  
+  
+  #### brands by region
+  
+  ## brands
+  assign(glue("{drug_name}_brand_region"),
+         get(glue("df_{drug_name}"))  %>%
+           group_by(month,brand,region) %>%
+           summarise(items = sum(items))
+  )
+  
+  assign(glue("{drug_name}_brand_region_plot"),
+         get(glue("{drug_name}_brand_region"))  %>%
+           ggplot(aes(x = month, y = items, color = brand)) +
+           facet_wrap(~ region, ncol = 3) +
+           geom_line() +
+           scale_y_continuous(labels = label_comma()) +
+           ggtitle(drug_name) +
+           theme_bw()
+  )
+  
+  ggsave(
+    filename = here::here(
+      "output",
+      "by_brand",
+      glue("{drug_name}_brand_region_plot.png")
+    ),
+    get(glue("{drug_name}_brand_region_plot")),
+    dpi = 600,
+    width = 45,
+    height = 30,
+    units = "cm"
+  )
+  
+  # brands + formulation
+  assign(glue("{drug_name}_brand_name"),
+         get(glue("df_{drug_name}"))  %>%
+           group_by(month,brand_name) %>%
+           summarise(items = sum(items))
+  )
+  
+  assign(glue("{drug_name}_brand_name_plot"),
+         get(glue("{drug_name}_brand_name"))  %>%
+           ggplot(aes(x = month, y = items, color = brand_name)) +
+           geom_line() +
+           scale_y_continuous(labels = label_comma()) +
+           ggtitle(drug_name) +
+           theme_bw()
+  )
+  ifelse(drug_name == "all_glp1",
+  ggsave(
+    filename = here::here(
+      "output",
+      "by_brand_formulation",
+      glue("{drug_name}_brand_name_plot.png")
+    ),
+    get(glue("{drug_name}_brand_name_plot")),
+    dpi = 600,
+    width = 45,
+    height = 15,
+    units = "cm"
+  ),
+  ggsave(
+    filename = here::here(
+      "output",
+      "by_brand_formulation",
+      glue("{drug_name}_brand_name_plot.png")
+    ),
+    get(glue("{drug_name}_brand_name_plot")),
+    dpi = 600,
+    width = 25,
+    height = 15,
+    units = "cm"
+  )
+  )
+  
+  # brands + formulation by region
+  assign(glue("{drug_name}_brand_name_region"),
+         get(glue("df_{drug_name}"))  %>%
+           group_by(month,brand_name,region) %>%
+           summarise(items = sum(items))
+  )
+  
+  assign(glue("{drug_name}_brand_name_region_plot"),
+         get(glue("{drug_name}_brand_name_region"))  %>%
+           ggplot(aes(x = month, y = items, color = brand_name)) +
+           facet_wrap(~ region, ncol = 3) +
+           geom_line() +
+           scale_y_continuous(labels = label_comma()) +
+           ggtitle(drug_name) +
+           theme_bw()
+  )
+  ifelse(drug_name == "all_glp1",
+         ggsave(
+           filename = here::here(
+             "output",
+             "by_brand_formulation",
+             glue("{drug_name}_brand_name_region_plot.png")
+           ),
+           get(glue("{drug_name}_brand_name_region_plot")),
+           dpi = 600,
+           width = 65,
+           height = 30,
+           units = "cm"
+         ),
+         ggsave(
+           filename = here::here(
+             "output",
+             "by_brand_formulation",
+             glue("{drug_name}_brand_name_region_plot.png")
+           ),
+           get(glue("{drug_name}_brand_name_region_plot")),
+           dpi = 600,
+           width = 45,
+           height = 30,
+           units = "cm"
+         )
+  )
+  
+  
+  
+}
+  
+  
