@@ -1,29 +1,90 @@
 library(readr)
 library(here)
-library("glue")
+library(glue)
+library(dplyr)
+library(tidyr)
+library(gets)
+library(caTools)
+library(stringr)
+library(ggplot2)
+library(scales)
 
 source("analysis/design.R")
 # source("analysis/isat/change_detection.R")
 
+start_date<-as.Date("2023/02/01")
+end_date <- as.Date("2025/06/01")
 
-# df_input <- read_csv(here::here(path_name,csv_name)) %>%
-#   mutate(ratio_quantity= numerator / denominator) %>%
-#   select(code, month,ratio_quantity ) %>%
-#   pivot_wider(names_from = code,values_from =ratio_quantity) 
+df_atorvastatin <- read_csv(here::here(directory_name,"atorvastatin_list.csv")) %>%
+  filter(str_detect(bnf_name, '20')) %>%
+  group_by(month,regional_team) %>%
+  summarise(items=sum(items),
+            total_list_size=mean(total_list_size),
+            rate = items / total_list_size)  %>%
+  ungroup()
+
+df_inclisiran <- read_csv(here::here(directory_name,"inclisiran_list.csv")) %>%
+  group_by(month,regional_team) %>%
+  summarise(items=sum(items),
+            total_list_size=mean(total_list_size),
+            rate = items / total_list_size) %>%
+  ungroup()
+
+df_tirzepatide <- read_csv(here::here(directory_name,"tirzepatide_list.csv")) %>%
+  group_by(month,regional_team) %>%
+  summarise(items=sum(items),
+            total_list_size=mean(total_list_size),
+            rate = items / total_list_size) %>%
+  ungroup()
 
 
+df_regions <- read_csv(here::here("data","NHS_England_Names_and_Codes_in_England.csv")) %>%
+      rename(regional_team = NHSER24CDH ,region = NHSER24NM) 
 
-get_data<-function(directory_name,csv_name){
-      assign("df",read_csv(here::here(directory_name,csv_name)), envir = .GlobalEnv)
-    }
+get_data<-function(bnf_name){
+      assign("df",get(glue("df_{bnf_name}")) %>%
+               left_join(df_regions), envir = .GlobalEnv) 
+}
+
+
+exploratory_plots <-function(df,bnf_name){
+  df_plot<-df %>%
+     ggplot(aes(x = month, y = rate)) +
+     geom_line() +
+     facet_wrap(~ region, ncol = 3)  +
+     scale_y_continuous(labels = label_comma()) +
+     scale_x_date(date_breaks = "4 months") +
+     theme(axis.text.x = element_text(angle =90)) +
+     ylab("Rate")
+         
+   ggsave(
+     filename = here::here(
+       "output",
+       "isat",
+       bnf_name,
+       glue(bnf_name,"_region_plot.png")),
+     df_plot,
+     dpi = 600,
+     width = 80,
+     height = 30,
+     units = "cm"
+   )
+
+}
     
 shape_dataframe<-function(df){
   assign("df_shape",df %>%
-      mutate(ratio_quantity= numerator / denominator) %>%
+      mutate(month= as.Date(month)) %>%
+        group_by(region) %>%
+        complete(month = seq.Date(min(start_date), max(end_date), by="month")) %>%
+        ungroup() %>%
+        rename(ratio_quantity = rate,
+               code = region) %>%
       select(code, month,ratio_quantity ) %>%
       pivot_wider(names_from = code,
                   values_from =ratio_quantity,
-                  names_prefix = "ratio_quantity."),
+                  names_prefix = "ratio_quantity.") %>%
+        replace(is.na(.), 0),
       envir = .GlobalEnv) }
 
 
@@ -38,7 +99,11 @@ data_pick<-function(df_shape){
   assign("vars",length(names.rel),envir = .GlobalEnv)
 }
 
-get_data(directory_name = directory_name, csv_name=csv_name)
+
+
+for (bnf_name in bnf_names){
+get_data(bnf_name)
+exploratory_plots(df,bnf_name)
 shape_dataframe(df)
 data_pick(df_shape)
 
@@ -350,7 +415,7 @@ for (i in 1:(vars)) {
   
   #### Save analysis plots      
   if (saveplots_analysis){
-    filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
+    filename <- paste(fig_path_tis_analysis,"/",bnf_name, "/",results$name[i], ".png", sep="")
     wid <- 500
     hei <- 500
     png(filename)
@@ -373,14 +438,14 @@ for (i in 1:(vars)) {
     #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
     
     #print(names.rel[i])
-    dev.copy(png,filename=filename, width=wid, height=hei)
-    dev.off()
     dev.off()
   }
   
 } #loop over i closed 
 
-write.csv(results,"output.csv" )
+write_csv(results,glue(fig_path_tis_analysis,"/",bnf_name, "/","output.csv"))
 print("Done extracting results")
 
+}
 
+rm()
